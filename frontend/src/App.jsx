@@ -1,19 +1,39 @@
-import "./index.css";
-import { FaReact } from "react-icons/fa";
-import { Icon } from "@iconify/react";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './components/Home';
+import AddDeviceForm from './components/AddDeviceForm';
+import BulkUploadDevices from './components/BulkUploadDevices';
+import DevicesList from './components/DevicesList';
+import AddIpForm from './components/AddIpForm';
+import BulkAddIps from './components/BulkAddIps';
+import IpAddressList from './components/IpAddressList';
+import AddClientForm from './components/AddClientForm';
+import ClientsList from './components/ClientsList';
 
 function App() {
   return (
-    <>
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-      <div className="flex items-center gap-4 mt-3">
-        <FaReact size={30} color="#61DAFB" />
-        <Icon icon="mdi:github" width="30" height="30" />
-      </div>
-    </div>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="devices">
+            <Route path="add" element={<AddDeviceForm />} />
+            <Route path="bulk-add" element={<BulkUploadDevices />} />
+            <Route path="list" element={<DevicesList />} />
+          </Route>
+          <Route path="ips">
+            <Route path="add" element={<AddIpForm />} />
+            <Route path="bulk-add" element={<BulkAddIps />} />
+            <Route path="list" element={<IpAddressList />} />
+          </Route>
+          <Route path="clients">
+            <Route path="add" element={<AddClientForm />} />
+            <Route path="list" element={<ClientsList />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import mysql from 'mysql2';
+import deviceRoutes from './routes/devices.js';
+import ipRoutes from './routes/ips.js';
+import clientRoutes from './routes/clients.js';
 
 dotenv.config();
 
@@ -10,24 +12,17 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Database connection
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'client_system',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-// Test route
+// Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 });
+
+app.use('/api/devices', deviceRoutes);
+app.use('/api/ips', ipRoutes);
+app.use('/api/clients', clientRoutes);
 
 const PORT = process.env.PORT || 5000;
 
