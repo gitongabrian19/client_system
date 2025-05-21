@@ -1,0 +1,50 @@
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS client_system;
+USE client_system;
+
+-- Create locations table
+CREATE TABLE IF NOT EXISTS locations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create devices table
+CREATE TABLE IF NOT EXISTS devices (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    device_name VARCHAR(255) NOT NULL,
+    mac_address VARCHAR(17) NOT NULL UNIQUE,
+    location_id INT,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
+);
+
+-- Create ip_addresses table
+CREATE TABLE IF NOT EXISTS ip_addresses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    ip_address VARCHAR(15) NOT NULL UNIQUE,
+    device_id INT,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL
+);
+
+-- Create clients table
+CREATE TABLE IF NOT EXISTS clients (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    device_id INT,
+    ip_id INT,
+    description TEXT,
+    contact_info VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL,
+    FOREIGN KEY (ip_id) REFERENCES ip_addresses(id) ON DELETE SET NULL
+);

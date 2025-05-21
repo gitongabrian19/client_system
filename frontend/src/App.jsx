@@ -9,6 +9,7 @@ import BulkAddIps from './components/BulkAddIps';
 import IpAddressList from './components/IpAddressList';
 import AddClientForm from './components/AddClientForm';
 import ClientsList from './components/ClientsList';
+import ClientsByArea from './components/ClientsByArea';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="clients">
             <Route path="add" element={<AddClientForm />} />
             <Route path="list" element={<ClientsList />} />
+            <Route path="by-area" element={<ClientsByArea />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -48,6 +48,16 @@ const menuItems = [
   { type: 'divider' },
   {
     type: 'group',
+    name: 'Client Management',
+    items: [
+      { name: 'Add Client', path: '/clients/add', icon: AddIcon },
+      { name: 'View Clients', path: '/clients/list', icon: ListIcon },
+      { name: 'Clients by Area', path: '/clients/by-area', icon: ClientIcon },
+    ]
+  },
+  { type: 'divider' },
+  {
+    type: 'group',
     name: 'IP Management',
     items: [
       { name: 'Add IP', path: '/ips/add', icon: AddIcon },
