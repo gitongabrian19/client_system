@@ -15,9 +15,15 @@ const validateDevice = [
 router.get('/', async (req, res) => {
     try {
         const [devices] = await db.query(`
-            SELECT d.*, l.name as location_name 
+            SELECT 
+                d.*,
+                l.name as location_name,
+                d.management_ip,
+                COUNT(DISTINCT ip.id) as assigned_ips_count
             FROM devices d 
             LEFT JOIN locations l ON d.location_id = l.id
+            LEFT JOIN ip_addresses ip ON d.id = ip.device_id
+            GROUP BY d.id
         `);
         res.json(devices);
     } catch (error) {
@@ -33,10 +39,10 @@ router.post('/', validateDevice, async (req, res) => {
     }
 
     try {
-        const { device_name, mac_address, location_id, description } = req.body;
+        const { device_name, device_type, mac_address, management_ip, location_id, description } = req.body;
         const [result] = await db.query(
-            'INSERT INTO devices (device_name, mac_address, location_id, description) VALUES (?, ?, ?, ?)',
-            [device_name, mac_address, location_id || null, description]
+            'INSERT INTO devices (device_name, device_type, mac_address, management_ip, location_id, description) VALUES (?, ?, ?, ?, ?, ?)',
+            [device_name, device_type, mac_address, management_ip, location_id || null, description]
         );
         res.status(201).json({ id: result.insertId, message: 'Device added successfully' });
     } catch (error) {

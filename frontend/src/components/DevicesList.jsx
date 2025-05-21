@@ -24,6 +24,7 @@ const DevicesList = () => {
       setDevices(data);
       setError(null);
     } catch (err) {
+      console.error('Error loading devices:', err);
       setError('Failed to load devices');
     }
   };
@@ -37,6 +38,7 @@ const DevicesList = () => {
       await api.deleteDevice(id);
       await loadDevices();
     } catch (err) {
+      console.error('Error deleting device:', err);
       setError('Failed to delete device');
     }
   };
@@ -67,7 +69,7 @@ const DevicesList = () => {
               <TableRow key={device.id}>
                 <TableCell>{device.device_name}</TableCell>
                 <TableCell>{device.mac_address}</TableCell>
-                <TableCell>{device.location}</TableCell>
+                <TableCell>{device.location_name || 'No Location'}</TableCell>
                 <TableCell>{device.description}</TableCell>
                 <TableCell>
                   <IconButton

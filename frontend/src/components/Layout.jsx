@@ -65,15 +65,7 @@ const menuItems = [
       { name: 'IP Pool', path: '/ips/list', icon: ListIcon },
     ]
   },
-  { type: 'divider' },
-  {
-    type: 'group',
-    name: 'Client Management',
-    items: [
-      { name: 'Add Client', path: '/clients/add', icon: AddIcon },
-      { name: 'View Clients', path: '/clients/list', icon: ListIcon },
-    ]
-  },
+
 ];
 
 const Layout = () => {

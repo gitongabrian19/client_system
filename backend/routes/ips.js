@@ -14,9 +14,16 @@ const validateIp = [
 router.get('/', async (req, res) => {
     try {
         const [ips] = await db.query(`
-            SELECT i.*, d.device_name 
+            SELECT 
+                i.*,
+                d.device_name,
+                d.device_type,
+                c.id as client_id,
+                c.name as client_name
             FROM ip_addresses i 
             LEFT JOIN devices d ON i.device_id = d.id
+            LEFT JOIN clients c ON i.id = c.ip_id
+            ORDER BY i.ip_address
         `);
         res.json(ips);
     } catch (error) {

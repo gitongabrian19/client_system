@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS locations (
 CREATE TABLE IF NOT EXISTS devices (
     id INT PRIMARY KEY AUTO_INCREMENT,
     device_name VARCHAR(255) NOT NULL,
+    device_type ENUM('switch', 'router', 'ap', 'gateway', 'firewall', 'other') DEFAULT 'other',
     mac_address VARCHAR(17) NOT NULL UNIQUE,
+    management_ip VARCHAR(15) NOT NULL,
     location_id INT,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

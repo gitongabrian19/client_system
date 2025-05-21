@@ -44,12 +44,8 @@ export const api = {
     return response.data;
   },
 
-  bulkAddIpAddresses: async (data, type = 'json') => {
-    const response = await axios.post(`${API_URL}/ips/bulk`, {
-      type,
-      ips: type === 'json' ? data : undefined,
-      data: type === 'csv' ? data : undefined,
-    });
+  bulkAddIpAddresses: async (ips) => {
+    const response = await axios.post(`${API_URL}/ips/bulk`, { ips });
     return response.data;
   },
 
@@ -74,16 +70,27 @@ export const api = {
     return response.data;
   },
 
-  getAvailableIps: async (deviceId = null) => {
-    const url = deviceId 
-      ? `${API_URL}/clients/available-ips/${deviceId}`
-      : `${API_URL}/clients/available-ips`;
-    const response = await axios.get(url);
+  getClientsByArea: async () => {
+    const response = await axios.get(`${API_URL}/clients/by-area`);
     return response.data;
   },
 
+  getAvailableIps: async (deviceId = null) => {
+    try {
+      const url = deviceId 
+        ? `${API_URL}/clients/available-ips/${deviceId}`
+        : `${API_URL}/clients/available-ips`;
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting available IPs:', error);
+      throw error;
+    }
+  },
+
+  // Location Management
   getLocations: async () => {
-    const response = await axios.get(`${API_URL}/clients/locations`);
+    const response = await axios.get(`${API_URL}/locations`);
     return response.data;
   },
 
