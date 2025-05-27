@@ -2,20 +2,50 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3001/api';
 
+// Create axios instance with default config
+const axiosInstance = axios.create({
+  baseURL: API_URL
+});
+
+// Add token to requests if available
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['x-auth-token'] = token;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const api = {
+  // Authentication
+  login: async (credentials) => {
+    const response = await axiosInstance.post('/auth/login', credentials);
+    return response.data;
+  },
+
+  verifyToken: async () => {
+    const response = await axiosInstance.get('/auth/verify');
+    return response.data;
+  },
+
   // Device Management
   getAllDevices: async () => {
-    const response = await axios.get(`${API_URL}/devices`);
+    const response = await axiosInstance.get('/devices');
     return response.data;
   },
 
   addDevice: async (deviceData) => {
-    const response = await axios.post(`${API_URL}/devices`, deviceData);
+    const response = await axiosInstance.post('/devices', deviceData);
     return response.data;
   },
 
   bulkAddDevices: async (data, type = 'json') => {
-    const response = await axios.post(`${API_URL}/devices/bulk`, {
+    const response = await axiosInstance.post('/devices/bulk', {
       type,
       devices: type === 'json' ? data : undefined,
       data: type === 'csv' ? data : undefined,
@@ -24,63 +54,63 @@ export const api = {
   },
 
   deleteDevice: async (id) => {
-    const response = await axios.delete(`${API_URL}/devices/${id}`);
+    const response = await axiosInstance.delete(`/devices/${id}`);
     return response.data;
   },
 
   // IP Management
   getAllIpAddresses: async () => {
-    const response = await axios.get(`${API_URL}/ips`);
+    const response = await axiosInstance.get('/ips');
     return response.data;
   },
 
   getDeviceIpAddresses: async (deviceId) => {
-    const response = await axios.get(`${API_URL}/ips/device/${deviceId}`);
+    const response = await axiosInstance.get(`/ips/device/${deviceId}`);
     return response.data;
   },
 
   addIpAddress: async (ipData) => {
-    const response = await axios.post(`${API_URL}/ips`, ipData);
+    const response = await axiosInstance.post('/ips', ipData);
     return response.data;
   },
 
   bulkAddIpAddresses: async (ips) => {
-    const response = await axios.post(`${API_URL}/ips/bulk`, { ips });
+    const response = await axiosInstance.post('/ips/bulk', { ips });
     return response.data;
   },
 
   assignIpToDevice: async (ipId, deviceId) => {
-    const response = await axios.put(`${API_URL}/ips/${ipId}/assign/${deviceId}`);
+    const response = await axiosInstance.put(`/ips/${ipId}/assign/${deviceId}`);
     return response.data;
   },
 
   unassignIp: async (ipId) => {
-    const response = await axios.put(`${API_URL}/ips/${ipId}/unassign`);
+    const response = await axiosInstance.put(`/ips/${ipId}/unassign`);
     return response.data;
   },
 
   deleteIpAddress: async (id) => {
-    const response = await axios.delete(`${API_URL}/ips/${id}`);
+    const response = await axiosInstance.delete(`/ips/${id}`);
     return response.data;
   },
 
   // Client Management
   getAllClients: async () => {
-    const response = await axios.get(`${API_URL}/clients`);
+    const response = await axiosInstance.get('/clients');
     return response.data;
   },
 
   getClientsByArea: async () => {
-    const response = await axios.get(`${API_URL}/clients/by-area`);
+    const response = await axiosInstance.get('/clients/by-area');
     return response.data;
   },
 
   getAvailableIps: async (deviceId = null) => {
     try {
       const url = deviceId 
-        ? `${API_URL}/clients/available-ips/${deviceId}`
-        : `${API_URL}/clients/available-ips`;
-      const response = await axios.get(url);
+        ? `/clients/available-ips/${deviceId}`
+        : `/clients/available-ips`;
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
       console.error('Error getting available IPs:', error);
@@ -90,27 +120,27 @@ export const api = {
 
   // Location Management
   getLocations: async () => {
-    const response = await axios.get(`${API_URL}/locations`);
+    const response = await axiosInstance.get('/locations');
     return response.data;
   },
 
   addClient: async (clientData) => {
-    const response = await axios.post(`${API_URL}/clients`, clientData);
+    const response = await axiosInstance.post('/clients', clientData);
     return response.data;
   },
 
   updateClient: async (id, clientData) => {
-    const response = await axios.put(`${API_URL}/clients/${id}`, clientData);
+    const response = await axiosInstance.put(`/clients/${id}`, clientData);
     return response.data;
   },
 
   deleteClient: async (id) => {
-    const response = await axios.delete(`${API_URL}/clients/${id}`);
+    const response = await axiosInstance.delete(`/clients/${id}`);
     return response.data;
   },
 
   bulkAddClients: async (data, type = 'json') => {
-    const response = await axios.post(`${API_URL}/clients/bulk`, {
+    const response = await axiosInstance.post('/clients/bulk', {
       type,
       clients: type === 'json' ? data : undefined,
       data: type === 'csv' ? data : undefined,
