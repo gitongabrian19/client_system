@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { body, validationResult } = require('express-validator');
+const auth = require('../middleware/auth');
 
 // Validation middleware
 const validateLocation = [
@@ -12,9 +13,10 @@ const validateLocation = [
 // Get all locations
 router.get('/', async (req, res) => {
     try {
-        const [locations] = await db.query('SELECT * FROM locations');
+        const [locations] = await db.query('SELECT * FROM locations ORDER BY name');
         res.json(locations);
     } catch (error) {
+        console.error('Error fetching locations:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -30,12 +32,13 @@ router.get('/:id', async (req, res) => {
         
         res.json(locations[0]);
     } catch (error) {
+        console.error('Error fetching location:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Add new location
-router.post('/', validateLocation, async (req, res) => {
+// Add new location (protected)
+router.post('/', [auth, validateLocation], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -48,14 +51,16 @@ router.post('/', validateLocation, async (req, res) => {
             [name, description]
         );
         
-        res.status(201).json({ id: result.insertId, message: 'Location added successfully' });
+        const [newLocation] = await db.query('SELECT * FROM locations WHERE id = ?', [result.insertId]);
+        res.status(201).json(newLocation[0]);
     } catch (error) {
+        console.error('Error adding location:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Update location
-router.put('/:id', validateLocation, async (req, res) => {
+// Update location (protected)
+router.put('/:id', [auth, validateLocation], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -63,32 +68,44 @@ router.put('/:id', validateLocation, async (req, res) => {
 
     try {
         const { name, description } = req.body;
-        await db.query(
+        const [result] = await db.query(
             'UPDATE locations SET name = ?, description = ? WHERE id = ?',
             [name, description, req.params.id]
         );
-        
-        res.json({ message: 'Location updated successfully' });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+
+        const [updatedLocation] = await db.query('SELECT * FROM locations WHERE id = ?', [req.params.id]);
+        res.json(updatedLocation[0]);
     } catch (error) {
+        console.error('Error updating location:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Delete location
-router.delete('/:id', async (req, res) => {
+// Delete location (protected)
+router.delete('/:id', auth, async (req, res) => {
     try {
-        // First check if any devices are using this location
+        // Check if location is being used by any devices
         const [devices] = await db.query('SELECT COUNT(*) as count FROM devices WHERE location_id = ?', [req.params.id]);
         
         if (devices[0].count > 0) {
             return res.status(400).json({ 
-                error: 'Cannot delete location: it is being used by one or more devices' 
+                error: 'Cannot delete location: There are devices assigned to this location' 
             });
         }
-        
-        await db.query('DELETE FROM locations WHERE id = ?', [req.params.id]);
+
+        const [result] = await db.query('DELETE FROM locations WHERE id = ?', [req.params.id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Location not found' });
+        }
+
         res.json({ message: 'Location deleted successfully' });
     } catch (error) {
+        console.error('Error deleting location:', error);
         res.status(500).json({ error: error.message });
     }
 });

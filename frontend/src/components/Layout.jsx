@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -12,7 +13,7 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  Divider,
+  Divider
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -23,8 +24,10 @@ import {
   Add as AddIcon,
   ViewList as ListIcon,
   CloudUpload as UploadIcon,
+  LocationOn as LocationIcon,
+  Logout as LogoutIcon,
+  Send as SendIcon
 } from '@mui/icons-material';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -34,6 +37,14 @@ const menuItems = [
     name: 'Home',
     path: '/',
     icon: HomeIcon 
+  },
+  { type: 'divider' },
+  {
+    type: 'group',
+    name: 'Location Management',
+    items: [
+      { name: 'Manage Locations', path: '/locations', icon: LocationIcon },
+    ]
   },
   { type: 'divider' },
   {
@@ -53,6 +64,7 @@ const menuItems = [
       { name: 'Add Client', path: '/clients/add', icon: AddIcon },
       { name: 'View Clients', path: '/clients/list', icon: ListIcon },
       { name: 'Clients by Area', path: '/clients/by-area', icon: ClientIcon },
+      { name: 'SMS Management', path: '/clients/sms', icon: SendIcon },
     ]
   },
   { type: 'divider' },
@@ -64,8 +76,7 @@ const menuItems = [
       { name: 'Bulk Add IPs', path: '/ips/bulk-add', icon: UploadIcon },
       { name: 'IP Pool', path: '/ips/list', icon: ListIcon },
     ]
-  },
-
+  }
 ];
 
 const Layout = () => {
@@ -80,6 +91,12 @@ const Layout = () => {
   const handleNavigation = (path) => {
     navigate(path);
     setMobileOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('admin');
+    navigate('/login');
   };
 
   const drawer = (
@@ -132,6 +149,15 @@ const Layout = () => {
             </ListItem>
           );
         })}
+        <Divider />
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItemButton>
+        </ListItem>
       </List>
     </div>
   );
@@ -156,8 +182,8 @@ const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Network Management System
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Client Management System
           </Typography>
         </Toolbar>
       </AppBar>
@@ -169,7 +195,9 @@ const Layout = () => {
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
+          ModalProps={{
+            keepMounted: true
+          }}
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
@@ -200,9 +228,9 @@ const Layout = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          mt: '64px'
         }}
       >
-        <Toolbar />
         <Outlet />
       </Box>
     </Box>

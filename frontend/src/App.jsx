@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Home from './components/Home';
 import Login from './components/Login';
@@ -12,43 +11,10 @@ import IpAddressList from './components/IpAddressList';
 import AddClientForm from './components/AddClientForm';
 import ClientsList from './components/ClientsList';
 import ClientsByArea from './components/ClientsByArea';
+import LocationManagement from './components/LocationManagement';
+import SMSManagement from './components/SMSManagement';
 import { api } from './utils/api';
-
-// Protected Route component
-const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token');
-        }
-        await api.verifyToken();
-        setIsAuthenticated(true);
-      } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('admin');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyAuth();
-  }, []);
-
-  if (loading) {
-    return null; // or a loading spinner
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
-};
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -62,6 +28,7 @@ function App() {
           </ProtectedRoute>
         }>
           <Route index element={<Home />} />
+          <Route path="locations" element={<LocationManagement />} />
           <Route path="devices">
             <Route path="add" element={<AddDeviceForm />} />
             <Route path="bulk-add" element={<BulkUploadDevices />} />
@@ -76,6 +43,7 @@ function App() {
             <Route path="add" element={<AddClientForm />} />
             <Route path="list" element={<ClientsList />} />
             <Route path="by-area" element={<ClientsByArea />} />
+            <Route path="sms" element={<SMSManagement />} />
           </Route>
         </Route>
         

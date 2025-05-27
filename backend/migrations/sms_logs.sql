@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS sms_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id INT NOT NULL,
+    message TEXT NOT NULL,
+    sent_at DATETIME NOT NULL,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+); 

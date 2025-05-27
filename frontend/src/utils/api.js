@@ -124,6 +124,21 @@ export const api = {
     return response.data;
   },
 
+  addLocation: async (locationData) => {
+    const response = await axiosInstance.post('/locations', locationData);
+    return response.data;
+  },
+
+  updateLocation: async (id, locationData) => {
+    const response = await axiosInstance.put(`/locations/${id}`, locationData);
+    return response.data;
+  },
+
+  deleteLocation: async (id) => {
+    const response = await axiosInstance.delete(`/locations/${id}`);
+    return response.data;
+  },
+
   addClient: async (clientData) => {
     const response = await axiosInstance.post('/clients', clientData);
     return response.data;
