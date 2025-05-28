@@ -6,7 +6,7 @@ class SMSService {
         this.apiKey = process.env.UJUMBE_API_KEY;
         this.email = process.env.UJUMBE_EMAIL;
         this.senderId = process.env.UJUMBE_SENDER_ID || 'UjumbeSMS';
-        this.baseUrl = 'http://ujumbesms.co.ke/api/messaging';
+        this.baseUrl = 'https://ujumbesms.co.ke/api/messaging';
     }
 
     async sendSMS(phoneNumbers, message) {
