@@ -60,3 +60,12 @@ CREATE TABLE IF NOT EXISTS clients (
     FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL,
     FOREIGN KEY (ip_id) REFERENCES ip_addresses(id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS sms_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    client_id INT NOT NULL,
+    message TEXT NOT NULL,
+    sent_at DATETIME NOT NULL,
+    status VARCHAR(20) DEFAULT 'sent',
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

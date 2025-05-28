@@ -1,24 +1,41 @@
 const axios = require('axios');
+require('dotenv').config();
 
 class SMSService {
     constructor() {
         this.apiKey = process.env.UJUMBE_API_KEY;
-        this.senderId = process.env.UJUMBE_SENDER_ID;
-        this.baseUrl = 'https://ujumbe.co.ke/api/messaging';
+        this.email = process.env.UJUMBE_EMAIL;
+        this.senderId = process.env.UJUMBE_SENDER_ID || 'UjumbeSMS';
+        this.baseUrl = 'http://ujumbesms.co.ke/api/messaging';
     }
 
     async sendSMS(phoneNumbers, message) {
         try {
-            const response = await axios.post(this.baseUrl, {
-                data: {
-                    sender_id: this.senderId,
-                    message: message,
-                    phone_numbers: Array.isArray(phoneNumbers) ? phoneNumbers : [phoneNumbers]
-                }
-            }, {
+            const recipients = Array.isArray(phoneNumbers) ? phoneNumbers : [phoneNumbers];
+
+            // ✅ Auto-format to international format
+            const formattedNumbers = recipients.map(number => this.formatPhoneNumber(number)).join(',');
+
+            const payload = {
+                data: [
+                    {
+                        message_bag: {
+                            numbers: formattedNumbers,
+                            message: message,
+                            sender: this.senderId
+                        }
+                    }
+                ]
+            };
+
+            console.log('Sending request with payload:', JSON.stringify(payload, null, 2));
+
+            const response = await axios.post(this.baseUrl, payload, {
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
+                    'X-Authorization': this.apiKey,
+                    'email': this.email,
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             });
 
@@ -29,28 +46,29 @@ class SMSService {
         }
     }
 
-    // Format phone number to required format (e.g., +254...)
+    // ✅ Format to international (E.164) format: 2547XXXXXXX
     formatPhoneNumber(phone) {
-        // Remove any non-digit characters
         let cleaned = phone.replace(/\D/g, '');
-        
-        // If number starts with 0, replace with +254
+
+        // Remove leading 0 or + if present
         if (cleaned.startsWith('0')) {
-            cleaned = '+254' + cleaned.substring(1);
+            cleaned = '254' + cleaned.substring(1);
+        } else if (cleaned.startsWith('+')) {
+            cleaned = cleaned.substring(1);
         }
-        
-        // If number starts with 254, add +
-        if (cleaned.startsWith('254')) {
-            cleaned = '+' + cleaned;
+
+        // If it still doesn't start with 254, add it
+        if (!cleaned.startsWith('254')) {
+            cleaned = '254' + cleaned;
         }
-        
-        // If number doesn't have country code, add it
-        if (!cleaned.startsWith('+')) {
-            cleaned = '+254' + cleaned;
+
+        // Final validation: should be 12 digits starting with 254
+        if (!/^254\d{9}$/.test(cleaned)) {
+            throw new Error(`Invalid phone number: ${phone}`);
         }
-        
+
         return cleaned;
     }
 }
 
-module.exports = new SMSService(); 
+module.exports = new SMSService();

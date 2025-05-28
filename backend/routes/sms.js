@@ -120,7 +120,46 @@ router.post('/send-by-location', [auth, validateLocationSMS], async (req, res) =
     }
 });
 
-// Get SMS history for a client
+// Get SMS history for all clients
+router.get('/history', auth, async (req, res) => {
+    try {
+        const [history] = await db.query(`
+            SELECT sl.*, c.name, c.contact_info
+            FROM sms_logs sl
+            JOIN clients c ON sl.client_id = c.id
+            ORDER BY sl.sent_at DESC
+            LIMIT 100
+        `);
+
+        // Format the history data
+        const formattedHistory = history.reduce((acc, log) => {
+            const existingEntry = acc.find(entry => 
+                entry.message === log.message && 
+                entry.timestamp === log.sent_at.toISOString()
+            );
+
+            if (existingEntry) {
+                existingEntry.recipients.push(log.contact_info);
+            } else {
+                acc.push({
+                    message: log.message,
+                    timestamp: log.sent_at.toISOString(),
+                    recipients: [log.contact_info],
+                    status: 'sent' // You can add actual status tracking if needed
+                });
+            }
+
+            return acc;
+        }, []);
+
+        res.json(formattedHistory);
+    } catch (error) {
+        console.error('Error fetching SMS history:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get SMS history for a specific client
 router.get('/history/:clientId', auth, async (req, res) => {
     try {
         const [history] = await db.query(

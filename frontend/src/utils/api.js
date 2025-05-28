@@ -162,4 +162,26 @@ export const api = {
     });
     return response.data;
   },
+
+  // SMS Management
+  sendSMSToLocation: async (locationId, message) => {
+    const response = await axiosInstance.post('/sms/send-by-location', {
+      locationId,
+      message
+    });
+    return response.data;
+  },
+
+  sendSMSToClients: async (recipients, message) => {
+    const response = await axiosInstance.post('/sms/send', {
+      recipients,
+      message
+    });
+    return response.data;
+  },
+
+  getSMSHistory: async () => {
+    const response = await axiosInstance.get('/sms/history');
+    return response.data;
+  },
 };

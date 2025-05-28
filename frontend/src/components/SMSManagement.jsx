@@ -16,10 +16,15 @@ import {
   List,
   ListItem,
   ListItemText,
-  Divider
+  Divider,
+  Tab,
+  Tabs,
+  CircularProgress,
+  Card,
+  CardContent
 } from '@mui/material';
-import { Send as SendIcon } from '@mui/icons-material';
-import axios from 'axios';
+import { Send as SendIcon, History as HistoryIcon } from '@mui/icons-material';
+import { api } from '../utils/api';
 
 const SMSManagement = () => {
   const [locations, setLocations] = useState([]);
@@ -29,16 +34,21 @@ const SMSManagement = () => {
   const [message, setMessage] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [smsHistory, setSmsHistory] = useState([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const MAX_SMS_LENGTH = 160;
 
   useEffect(() => {
     fetchLocations();
     fetchClients();
+    fetchSMSHistory();
   }, []);
 
   const fetchLocations = async () => {
     try {
-      const response = await axios.get('/api/locations');
-      setLocations(response.data);
+      const data = await api.getLocations();
+      setLocations(data);
     } catch (error) {
       showSnackbar('Failed to fetch locations', 'error');
     }
@@ -46,10 +56,19 @@ const SMSManagement = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get('/api/clients/list');
-      setClients(response.data);
+      const data = await api.getAllClients();
+      setClients(data);
     } catch (error) {
       showSnackbar('Failed to fetch clients', 'error');
+    }
+  };
+
+  const fetchSMSHistory = async () => {
+    try {
+      const data = await api.getSMSHistory();
+      setSmsHistory(data);
+    } catch (error) {
+      showSnackbar('Failed to fetch SMS history', 'error');
     }
   };
 
@@ -81,16 +100,16 @@ const SMSManagement = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      await axios.post('/api/sms/send-by-location', {
-        locationId: selectedLocation,
-        message: message.trim()
-      });
+      await api.sendSMSToLocation(selectedLocation, message.trim());
       showSnackbar('SMS sent successfully to all clients in the location');
       setMessage('');
+      fetchSMSHistory();
     } catch (error) {
       showSnackbar(error.response?.data?.error || 'Failed to send SMS', 'error');
     }
+    setLoading(false);
   };
 
   const handleSendToSelected = async () => {
@@ -99,18 +118,158 @@ const SMSManagement = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      await axios.post('/api/sms/send', {
-        recipients: selectedClients,
-        message: message.trim()
-      });
+      await api.sendSMSToClients(selectedClients, message.trim());
       showSnackbar('SMS sent successfully to selected clients');
       setMessage('');
       setSelectedClients([]);
+      fetchSMSHistory();
     } catch (error) {
       showSnackbar(error.response?.data?.error || 'Failed to send SMS', 'error');
     }
+    setLoading(false);
   };
+
+  const filteredClients = clients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.contact_info.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const renderSendByLocation = () => (
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Send by Location
+      </Typography>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>Location</InputLabel>
+        <Select
+          value={selectedLocation}
+          onChange={handleLocationChange}
+          label="Location"
+        >
+          {locations.map((location) => (
+            <MenuItem key={location.id} value={location.id}>
+              {location.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <TextField
+        fullWidth
+        multiline
+        rows={4}
+        label="Message"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        sx={{ mb: 1 }}
+        error={message.length > MAX_SMS_LENGTH}
+        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${message.length > MAX_SMS_LENGTH ? '(message too long)' : ''}`}
+      />
+
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={loading ? <CircularProgress size={24} /> : <SendIcon />}
+        onClick={handleSendToLocation}
+        disabled={!selectedLocation || !message.trim() || loading || message.length > MAX_SMS_LENGTH}
+      >
+        {loading ? 'Sending...' : 'Send to All Clients in Location'}
+      </Button>
+    </Paper>
+  );
+
+  const renderSendToSelected = () => (
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Send to Selected Clients
+      </Typography>
+      
+      <TextField
+        fullWidth
+        label="Search Clients"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 2 }}
+      />
+
+      <List sx={{ maxHeight: 200, overflow: 'auto', mb: 2 }}>
+        {filteredClients.map((client) => (
+          <React.Fragment key={client.id}>
+            <ListItem
+              button
+              onClick={() => handleClientSelect(client.id)}
+              selected={selectedClients.includes(client.id)}
+            >
+              <ListItemText
+                primary={client.name}
+                secondary={client.contact_info}
+              />
+              {selectedClients.includes(client.id) && (
+                <Chip
+                  label="Selected"
+                  color="primary"
+                  size="small"
+                />
+              )}
+            </ListItem>
+            <Divider />
+          </React.Fragment>
+        ))}
+      </List>
+
+      <TextField
+        fullWidth
+        multiline
+        rows={4}
+        label="Message"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        sx={{ mb: 1 }}
+        error={message.length > MAX_SMS_LENGTH}
+        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${message.length > MAX_SMS_LENGTH ? '(message too long)' : ''}`}
+      />
+
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={loading ? <CircularProgress size={24} /> : <SendIcon />}
+        onClick={handleSendToSelected}
+        disabled={selectedClients.length === 0 || !message.trim() || loading || message.length > MAX_SMS_LENGTH}
+      >
+        {loading ? 'Sending...' : `Send to Selected Clients (${selectedClients.length})`}
+      </Button>
+    </Paper>
+  );
+
+  const renderSMSHistory = () => (
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        SMS History
+      </Typography>
+      <List>
+        {smsHistory.map((sms, index) => (
+          <Card key={index} sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                {sms.recipients.join(', ')}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {sms.message}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Sent: {new Date(sms.timestamp).toLocaleString()}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Status: {sms.status}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </List>
+    </Paper>
+  );
 
   return (
     <Box sx={{ p: 3 }}>
@@ -118,99 +277,21 @@ const SMSManagement = () => {
         SMS Management
       </Typography>
 
+      <Tabs
+        value={activeTab}
+        onChange={(e, newValue) => setActiveTab(newValue)}
+        sx={{ mb: 3 }}
+      >
+        <Tab label="Send by Location" />
+        <Tab label="Send to Selected" />
+        <Tab label="SMS History" icon={<HistoryIcon />} iconPosition="end" />
+      </Tabs>
+
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Send by Location
-            </Typography>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Location</InputLabel>
-              <Select
-                value={selectedLocation}
-                onChange={handleLocationChange}
-                label="Location"
-              >
-                {locations.map((location) => (
-                  <MenuItem key={location.id} value={location.id}>
-                    {location.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<SendIcon />}
-              onClick={handleSendToLocation}
-              disabled={!selectedLocation || !message.trim()}
-            >
-              Send to All Clients in Location
-            </Button>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Send to Selected Clients
-            </Typography>
-            <List sx={{ maxHeight: 200, overflow: 'auto', mb: 2 }}>
-              {clients.map((client) => (
-                <React.Fragment key={client.id}>
-                  <ListItem
-                    button
-                    onClick={() => handleClientSelect(client.id)}
-                    selected={selectedClients.includes(client.id)}
-                  >
-                    <ListItemText
-                      primary={client.name}
-                      secondary={client.contact_info}
-                    />
-                    {selectedClients.includes(client.id) && (
-                      <Chip
-                        label="Selected"
-                        color="primary"
-                        size="small"
-                      />
-                    )}
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<SendIcon />}
-              onClick={handleSendToSelected}
-              disabled={selectedClients.length === 0 || !message.trim()}
-            >
-              Send to Selected Clients ({selectedClients.length})
-            </Button>
-          </Paper>
+        <Grid item xs={12}>
+          {activeTab === 0 && renderSendByLocation()}
+          {activeTab === 1 && renderSendToSelected()}
+          {activeTab === 2 && renderSMSHistory()}
         </Grid>
       </Grid>
 
@@ -219,11 +300,7 @@ const SMSManagement = () => {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>
       </Snackbar>
