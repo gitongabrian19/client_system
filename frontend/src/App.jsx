@@ -1,20 +1,19 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './components/Home';
-import Login from './components/Login';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import AddClientForm from './components/AddClientForm';
 import AddDeviceForm from './components/AddDeviceForm';
-import BulkUploadDevices from './components/BulkUploadDevices';
-import DevicesList from './components/DevicesList';
 import AddIpForm from './components/AddIpForm';
 import BulkAddIps from './components/BulkAddIps';
-import IpAddressList from './components/IpAddressList';
-import AddClientForm from './components/AddClientForm';
-import ClientsList from './components/ClientsList';
+import BulkUploadDevices from './components/BulkUploadDevices';
 import ClientsByArea from './components/ClientsByArea';
+import ClientsList from './components/ClientsList';
+import DevicesList from './components/DevicesList';
+import Home from './components/Home';
+import IpAddressList from './components/IpAddressList';
+import Layout from './components/Layout';
 import LocationManagement from './components/LocationManagement';
-import SMSManagement from './components/SMSManagement';
-import { api } from './utils/api';
+import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import SMSManagement from './components/SMSManagement';
 
 function App() {
   return (

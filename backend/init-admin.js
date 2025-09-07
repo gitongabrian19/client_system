@@ -1,26 +1,27 @@
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const db = require('./config/database');
 
 async function initializeAdmin() {
     const admin = {
         username: 'admin',
-        password: 'admin123', // This is just an example password
+        password: 'admin123', 
         email: 'admin@example.com'
     };
 
     try {
         console.log('Adding initial admin user...');
-        
+
         // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(admin.password, salt);
-        
+
         // Insert admin into database
         await db.query(
             'INSERT INTO admins (username, password, email) VALUES (?, ?, ?)',
             [admin.username, hashedPassword, admin.email]
         );
-        
+
         console.log('Admin user created successfully!');
         console.log('Username:', admin.username);
         console.log('Password:', admin.password);
