@@ -136,6 +136,7 @@ const AddIpForm = () => {
       });
       reset();
     } catch (error) {
+      console.error("Error adding IP address:", error);
       setNotification({
         open: true,
         message: error.response?.data?.error || "Error adding IP address",

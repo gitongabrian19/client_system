@@ -126,7 +126,7 @@ CREATE TABLE `devices` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `device_name` varchar(255) NOT NULL,
   `device_type` enum('switch','router','ap','gateway','firewall','other') DEFAULT 'other',
-  `mac_address` varchar(17) NOT NULL,
+  `mac_address` varchar(17),
   `management_ip` varchar(15) NOT NULL,
   `location_id` int(11) DEFAULT NULL,
   `description` text DEFAULT NULL,

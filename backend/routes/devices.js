@@ -6,7 +6,7 @@ const { body, validationResult } = require('express-validator');
 // Validation middleware
 const validateDevice = [
     body('device_name').notEmpty().trim().escape(),
-    body('mac_address').matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/).withMessage('Invalid MAC address format'),
+    body('mac_address').optional().matches(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/).withMessage('Invalid MAC address format'),
     body('description').optional().trim().escape(),
     body('location_id').optional().isInt()
 ];
