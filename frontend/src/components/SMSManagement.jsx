@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -21,22 +21,26 @@ import {
   Tabs,
   CircularProgress,
   Card,
-  CardContent
-} from '@mui/material';
-import { Send as SendIcon, History as HistoryIcon } from '@mui/icons-material';
-import { api } from '../utils/api';
+  CardContent,
+} from "@mui/material";
+import { Send as SendIcon, History as HistoryIcon } from "@mui/icons-material";
+import { api } from "../utils/api";
 
 const SMSManagement = () => {
   const [locations, setLocations] = useState([]);
   const [clients, setClients] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedClients, setSelectedClients] = useState([]);
-  const [message, setMessage] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [message, setMessage] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const [smsHistory, setSmsHistory] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const MAX_SMS_LENGTH = 160;
 
   useEffect(() => {
@@ -50,7 +54,7 @@ const SMSManagement = () => {
       const data = await api.getLocations();
       setLocations(data);
     } catch (error) {
-      showSnackbar('Failed to fetch locations', 'error');
+      showSnackbar("Failed to fetch locations", "error");
     }
   };
 
@@ -59,7 +63,7 @@ const SMSManagement = () => {
       const data = await api.getAllClients();
       setClients(data);
     } catch (error) {
-      showSnackbar('Failed to fetch clients', 'error');
+      showSnackbar("Failed to fetch clients", "error");
     }
   };
 
@@ -68,7 +72,7 @@ const SMSManagement = () => {
       const data = await api.getSMSHistory();
       setSmsHistory(data);
     } catch (error) {
-      showSnackbar('Failed to fetch SMS history', 'error');
+      showSnackbar("Failed to fetch SMS history", "error");
     }
   };
 
@@ -78,15 +82,15 @@ const SMSManagement = () => {
   };
 
   const handleClientSelect = (clientId) => {
-    setSelectedClients(prev => {
+    setSelectedClients((prev) => {
       if (prev.includes(clientId)) {
-        return prev.filter(id => id !== clientId);
+        return prev.filter((id) => id !== clientId);
       }
       return [...prev, clientId];
     });
   };
 
-  const showSnackbar = (message, severity = 'success') => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
 
@@ -96,44 +100,51 @@ const SMSManagement = () => {
 
   const handleSendToLocation = async () => {
     if (!selectedLocation || !message.trim()) {
-      showSnackbar('Please select a location and enter a message', 'error');
+      showSnackbar("Please select a location and enter a message", "error");
       return;
     }
 
     setLoading(true);
     try {
       await api.sendSMSToLocation(selectedLocation, message.trim());
-      showSnackbar('SMS sent successfully to all clients in the location');
-      setMessage('');
+      showSnackbar("SMS sent successfully to all clients in the location");
+      setMessage("");
       fetchSMSHistory();
     } catch (error) {
-      showSnackbar(error.response?.data?.error || 'Failed to send SMS', 'error');
+      showSnackbar(
+        error.response?.data?.error || "Failed to send SMS",
+        "error"
+      );
     }
     setLoading(false);
   };
 
   const handleSendToSelected = async () => {
     if (selectedClients.length === 0 || !message.trim()) {
-      showSnackbar('Please select clients and enter a message', 'error');
+      showSnackbar("Please select clients and enter a message", "error");
       return;
     }
 
     setLoading(true);
     try {
       await api.sendSMSToClients(selectedClients, message.trim());
-      showSnackbar('SMS sent successfully to selected clients');
-      setMessage('');
+      showSnackbar("SMS sent successfully to selected clients");
+      setMessage("");
       setSelectedClients([]);
       fetchSMSHistory();
     } catch (error) {
-      showSnackbar(error.response?.data?.error || 'Failed to send SMS', 'error');
+      showSnackbar(
+        error.response?.data?.error || "Failed to send SMS",
+        "error"
+      );
     }
     setLoading(false);
   };
 
-  const filteredClients = clients.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contact_info.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredClients = clients.filter(
+    (client) =>
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contact_info.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const renderSendByLocation = () => (
@@ -165,17 +176,26 @@ const SMSManagement = () => {
         onChange={(e) => setMessage(e.target.value)}
         sx={{ mb: 1 }}
         error={message.length > MAX_SMS_LENGTH}
-        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${message.length > MAX_SMS_LENGTH ? '(message too long)' : ''}`}
+        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${
+          message.length > MAX_SMS_LENGTH ? "(message too long)" : ""
+        }`}
       />
 
       <Button
         fullWidth
         variant="contained"
         startIcon={loading ? <CircularProgress size={24} /> : <SendIcon />}
-        onClick={handleSendToLocation}
-        disabled={!selectedLocation || !message.trim() || loading || message.length > MAX_SMS_LENGTH}
+        onClick={() => {
+          handleSendToLocation();
+        }}
+        disabled={
+          !selectedLocation ||
+          !message.trim() ||
+          loading ||
+          message.length > MAX_SMS_LENGTH
+        }
       >
-        {loading ? 'Sending...' : 'Send to All Clients in Location'}
+        {loading ? "Sending..." : "Send to All Clients in Location"}
       </Button>
     </Paper>
   );
@@ -185,7 +205,7 @@ const SMSManagement = () => {
       <Typography variant="h6" gutterBottom>
         Send to Selected Clients
       </Typography>
-      
+
       <TextField
         fullWidth
         label="Search Clients"
@@ -194,7 +214,7 @@ const SMSManagement = () => {
         sx={{ mb: 2 }}
       />
 
-      <List sx={{ maxHeight: 200, overflow: 'auto', mb: 2 }}>
+      <List sx={{ maxHeight: 200, overflow: "auto", mb: 2 }}>
         {filteredClients.map((client) => (
           <React.Fragment key={client.id}>
             <ListItem
@@ -207,11 +227,7 @@ const SMSManagement = () => {
                 secondary={client.contact_info}
               />
               {selectedClients.includes(client.id) && (
-                <Chip
-                  label="Selected"
-                  color="primary"
-                  size="small"
-                />
+                <Chip label="Selected" color="primary" size="small" />
               )}
             </ListItem>
             <Divider />
@@ -228,17 +244,28 @@ const SMSManagement = () => {
         onChange={(e) => setMessage(e.target.value)}
         sx={{ mb: 1 }}
         error={message.length > MAX_SMS_LENGTH}
-        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${message.length > MAX_SMS_LENGTH ? '(message too long)' : ''}`}
+        helperText={`${message.length}/${MAX_SMS_LENGTH} characters ${
+          message.length > MAX_SMS_LENGTH ? "(message too long)" : ""
+        }`}
       />
 
       <Button
         fullWidth
         variant="contained"
         startIcon={loading ? <CircularProgress size={24} /> : <SendIcon />}
-        onClick={handleSendToSelected}
-        disabled={selectedClients.length === 0 || !message.trim() || loading || message.length > MAX_SMS_LENGTH}
+        onClick={() => {
+          handleSendToSelected();
+        }}
+        disabled={
+          selectedClients.length === 0 ||
+          !message.trim() ||
+          loading ||
+          message.length > MAX_SMS_LENGTH
+        }
       >
-        {loading ? 'Sending...' : `Send to Selected Clients (${selectedClients.length})`}
+        {loading
+          ? "Sending..."
+          : `Send to Selected Clients (${selectedClients.length})`}
       </Button>
     </Paper>
   );
@@ -253,7 +280,7 @@ const SMSManagement = () => {
           <Card key={index} sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="subtitle1" gutterBottom>
-                {sms.recipients.join(', ')}
+                {sms.recipients.join(", ")}
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 {sms.message}
@@ -261,7 +288,11 @@ const SMSManagement = () => {
               <Typography variant="caption" color="text.secondary">
                 Sent: {new Date(sms.timestamp).toLocaleString()}
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block" }}
+              >
                 Status: {sms.status}
               </Typography>
             </CardContent>
@@ -308,4 +339,4 @@ const SMSManagement = () => {
   );
 };
 
-export default SMSManagement; 
+export default SMSManagement;
