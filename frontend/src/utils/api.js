@@ -180,6 +180,11 @@ export const api = {
     return response.data;
   },
 
+  sendSMSToAll: async (message) => {
+    const response = await axiosInstance.post('/sms/send-to-all', { message });
+    return response.data;
+  },
+
   getSMSHistory: async () => {
     const response = await axiosInstance.get('/sms/history');
     return response.data;

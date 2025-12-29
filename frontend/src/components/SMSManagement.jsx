@@ -106,8 +106,17 @@ const SMSManagement = () => {
 
     setLoading(true);
     try {
-      await api.sendSMSToLocation(selectedLocation, message.trim());
-      showSnackbar("SMS sent successfully to all clients in the location");
+      const res = await api.sendSMSToLocation(selectedLocation, message.trim());
+      const skipped = res.skipped || 0;
+      if (skipped > 0) {
+        showSnackbar(
+          `SMS sent to ${res.recipients} recipients, skipped ${skipped} invalid contacts`,
+          "warning"
+        );
+        console.warn('Skipped contacts:', res.invalidContacts);
+      } else {
+        showSnackbar("SMS sent successfully to all clients in the location");
+      }
       setMessage("");
       fetchSMSHistory();
     } catch (error) {
@@ -115,6 +124,35 @@ const SMSManagement = () => {
         error.response?.data?.error || "Failed to send SMS",
         "error"
       );
+    }
+    setLoading(false);
+  };
+
+  const handleSendToAll = async () => {
+    if (!message.trim()) {
+      showSnackbar('Please enter a message', 'error');
+      return;
+    }
+
+    // simple confirmation to avoid accidental broadcasts
+    if (!window.confirm('Are you sure you want to send this message to ALL clients?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.sendSMSToAll(message.trim());
+      const skipped = res.skipped || 0;
+      if (skipped > 0) {
+        showSnackbar(`SMS sent to ${res.recipients} recipients, skipped ${skipped} invalid contacts`, 'warning');
+        console.warn('Skipped contacts:', res.invalidContacts);
+      } else {
+        showSnackbar('SMS sent to all clients successfully');
+      }
+      setMessage('');
+      fetchSMSHistory();
+    } catch (error) {
+      showSnackbar(error.response?.data?.error || 'Failed to send SMS to all', 'error');
     }
     setLoading(false);
   };
@@ -127,8 +165,17 @@ const SMSManagement = () => {
 
     setLoading(true);
     try {
-      await api.sendSMSToClients(selectedClients, message.trim());
-      showSnackbar("SMS sent successfully to selected clients");
+      const res = await api.sendSMSToClients(selectedClients, message.trim());
+      const skipped = res.skipped || 0;
+      if (skipped > 0) {
+        showSnackbar(
+          `SMS sent to ${res.recipients} recipients, skipped ${skipped} invalid contacts`,
+          "warning"
+        );
+        console.warn('Skipped contacts:', res.invalidContacts);
+      } else {
+        showSnackbar("SMS sent successfully to selected clients");
+      }
       setMessage("");
       setSelectedClients([]);
       fetchSMSHistory();
@@ -196,6 +243,20 @@ const SMSManagement = () => {
         }
       >
         {loading ? "Sending..." : "Send to All Clients in Location"}
+      </Button>
+
+      <Button
+        fullWidth
+        color="secondary"
+        sx={{ mt: 1 }}
+        variant="outlined"
+        startIcon={loading ? <CircularProgress size={20} /> : <SendIcon />}
+        onClick={() => handleSendToAll()}
+        disabled={
+          !message.trim() || loading || message.length > MAX_SMS_LENGTH
+        }
+      >
+        {loading ? 'Sending...' : 'Send to All Clients (DB)'}
       </Button>
     </Paper>
   );
@@ -271,35 +332,39 @@ const SMSManagement = () => {
   );
 
   const renderSMSHistory = () => (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        SMS History
-      </Typography>
-      <List>
-        {smsHistory.map((sms, index) => (
-          <Card key={index} sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="subtitle1" gutterBottom>
-                {sms.recipients.join(", ")}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {sms.message}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Sent: {new Date(sms.timestamp).toLocaleString()}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block" }}
-              >
-                Status: {sms.status}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
-      </List>
-    </Paper>
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          SMS History
+        </Typography>
+        <List>
+          {smsHistory.map((sms, index) => (
+            <Card key={index} sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  {sms.recipients.map((r, i) => (
+                    <span key={i}>
+                      {r.name} ({r.contact}){i < sms.recipients.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {sms.message}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Sent: {new Date(sms.timestamp).toLocaleString()}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block" }}
+                >
+                  Status: {sms.status}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </List>
+      </Paper>
   );
 
   return (
